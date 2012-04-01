@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- ====================================================================== 
+     Feb 27, 2012 11:56:11 AM                                                        
+
+     streamingtest    
+     Test the performance of resin streaming
+                   
+     mikeb01                                                                
+     ====================================================================== -->
+<project name="streamingtest" default="war">
+    <description>
+            Test the performance of resin streaming
+    </description>
+	
+	<property name="deploy.dir" value="${user.home}/Downloads/resin-pro-4.0.23/webapps/"/>
+
+    <!-- ================================= 
+          target: default              
+         ================================= -->
+    <target name="war" depends="compile" description="Test the performance of resin streaming">
+    	<war destfile="build/streamtest.war" webxml="resources/web.xml">
+    		<classes dir="build/classes" includes="**/*.class"/>
+    		<lib dir="lib" includes="disruptor-*.jar"/>
+    	</war>
+    	
+    	<copy file="build/streamtest.war" todir="${deploy.dir}"></copy>
+    </target>
+
+    <!-- - - - - - - - - - - - - - - - - - 
+          target: depends                      
+         - - - - - - - - - - - - - - - - - -->
+    <target name="compile">
+        <mkdir dir="build/classes"/>
+    	<mkdir dir="build/war"/>
+    	<javac destdir="build/classes" srcdir="src" debug="true">
+    		<classpath>
+    			<fileset dir="lib" includes="*.jar"/>
+    		</classpath>
+    	</javac>
+    </target>
+	
+	<target name="clean">
+		<delete dir="build"/>
+	</target>
+
+</project>
