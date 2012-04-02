@@ -199,32 +199,36 @@ public class DispatchServlet extends HttpServlet
             long delta = 0;
             long sent = 0;
             
-            do
+            try
             {
-                delta = System.nanoTime() - t0;
-                long shouldHaveSent = (messagesPerSecond * delta) / 1000000000;
-                
-                for (; sent < shouldHaveSent; sent++)
+                do
                 {
-                    if (!send(ringBuffer))
+                    delta = System.nanoTime() - t0;
+                    long shouldHaveSent = (messagesPerSecond * delta) / 1000000000;
+                    
+                    for (; sent < shouldHaveSent; sent++)
                     {
-                        return false;
+                        if (!send(ringBuffer))
+                        {
+                            return false;
+                        }
                     }
+                    
+                    LockSupport.parkNanos(1);
                 }
+                while (delta <= runtimeNanos);
                 
-                LockSupport.parkNanos(1);
-            }
-            while (delta <= runtimeNanos);
-            
-            int count = 0;
-            do
-            {
                 Thread.sleep(1000);
-                count++;
-            } 
-            while (!ringBuffer.hasAvailableCapacity(ringBuffer.getBufferSize()));
-            
-            return count == 1;
+                return ringBuffer.hasAvailableCapacity(ringBuffer.getBufferSize());
+                
+            }
+            finally
+            {
+                while (!ringBuffer.hasAvailableCapacity(ringBuffer.getBufferSize()))
+                {
+                    Thread.sleep(1000);
+                }
+            }
         }
 
         private boolean send(RingBuffer<byte[]> ringBuffer)
